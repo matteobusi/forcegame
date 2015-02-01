@@ -21,7 +21,7 @@
                    displayName="Source Files"
                    projectFiles="true">
       <itemPath>main.cpp</itemPath>
-      <itemPath>HandsTracking/temp.cpp</itemPath>
+      <itemPath>temp.cpp</itemPath>
     </logicalFolder>
     <logicalFolder name="TestFiles"
                    displayName="Test Files"
@@ -100,9 +100,9 @@
       </item>
       <item path="HandsTracking/MotionAnalyzer.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="HandsTracking/temp.cpp" ex="false" tool="1" flavor2="0">
-      </item>
       <item path="main.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="temp.cpp" ex="false" tool="1" flavor2="0">
       </item>
     </conf>
   </confs>

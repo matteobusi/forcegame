@@ -1,2 +1,2 @@
 # forcegame
-Final project for human-computer interaction course
+Final project for human-computer interaction course.

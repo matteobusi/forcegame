@@ -37,8 +37,8 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 OBJECTFILES= \
 	${OBJECTDIR}/HandsTracking/HandPoseExtractor.o \
 	${OBJECTDIR}/HandsTracking/MotionAnalyzer.o \
-	${OBJECTDIR}/HandsTracking/temp.o \
-	${OBJECTDIR}/main.o
+	${OBJECTDIR}/main.o \
+	${OBJECTDIR}/temp.o
 
 
 # C Compiler Flags
@@ -75,15 +75,15 @@ ${OBJECTDIR}/HandsTracking/MotionAnalyzer.o: HandsTracking/MotionAnalyzer.cpp
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/HandsTracking/MotionAnalyzer.o HandsTracking/MotionAnalyzer.cpp
 
-${OBJECTDIR}/HandsTracking/temp.o: HandsTracking/temp.cpp 
-	${MKDIR} -p ${OBJECTDIR}/HandsTracking
-	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/HandsTracking/temp.o HandsTracking/temp.cpp
-
 ${OBJECTDIR}/main.o: main.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/main.o main.cpp
+
+${OBJECTDIR}/temp.o: temp.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/temp.o temp.cpp
 
 # Subprojects
 .build-subprojects:
