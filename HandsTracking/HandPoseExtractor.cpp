@@ -13,78 +13,66 @@ using namespace std;
 /* Constants */
 const char HandPoseExtractor::palmDetectorCascade[] = "./res/palm.xml";
 const float HandPoseExtractor::hueRange[] = {0, 180};
-const int HandPoseExtractor::histROIsz = 16;
-const float* HandPoseExtractor::ranges = hueRange; 
-const Scalar HandPoseExtractor::minHSV = Scalar(0, 107, 66);
-const Scalar HandPoseExtractor::maxHSV = Scalar(180, 256, 256);
+const float HandPoseExtractor::saturationRange[] = {0, 255};
+const int HandPoseExtractor::histROIsz[] = { 16, 32 };
+const float* HandPoseExtractor::ranges[] = { hueRange, saturationRange}; 
+const int HandPoseExtractor::ch[] = {0, 1};
 
-HandPoseExtractor::HandPoseExtractor(const Mat& roi, const Rect& initialTW) 
+HandPoseExtractor::HandPoseExtractor(const Mat& frame, const Rect& oTrackWindow) 
 {
-    /* Setup for roi */
-    Mat hsvROI;
-    Mat hueROI;
-    Mat maskROI;
+    Mat roi(frame, oTrackWindow);
+    Mat roiHSV;
+    Mat roiMask;
     histROI = Mat();
+   
+    /* SKIN */
+    minHSV = Scalar(0, 58, 0);
+    maxHSV = Scalar(50, 174, 255);
     
-    imshow("test", roi);
+    cvtColor(roi, roiHSV, COLOR_BGR2HSV);
+
+    inRange(roiHSV, minHSV, maxHSV, roiMask);
+    calcHist(&roiHSV, 1, ch, roiMask, histROI, 2, histROIsz, ranges);
     
-    /* Convert to HSV */
-    cvtColor(roi, hsvROI, COLOR_BGR2HSV);
-    inRange(hsvROI, minHSV, maxHSV, maskROI);
+    normalize(histROI, histROI, 0, 255, NORM_MINMAX);
+
+    trackWindow = Rect(oTrackWindow);
+    origTrackWindow = Rect(oTrackWindow);
     
-    /* Extract Hue channel */
-    hueROI.create(hsvROI.size(), hsvROI.depth());
-    int ch[] = {0, 0};
-    mixChannels(&hsvROI, 1, &hueROI, 1, ch, 1); 
-    
-    /* Calculate the histogram :) */ 
-    calcHist(&hueROI, 1, 0, maskROI, histROI, 1, &histROIsz, &ranges);
-    normalize(histROI, histROI, 0, 255, CV_MINMAX);
-    
-    trackWindow = Rect(initialTW);
-    origTrackWindow = Rect(initialTW);
-    
-    /* Setup everything for haar-like feature detection */
-    palmClassifier = CascadeClassifier();
-    if(!palmClassifier.load(palmDetectorCascade))
-    {
-        cerr << "Error: cannot find haar-cascade file." << endl;
-        exit(-1);    
-    }
+    oldBackProj = Mat();
 }
 
-RotatedRect HandPoseExtractor::getROICurrent(const Mat& frame)
+
+RotatedRect HandPoseExtractor::getHandPosition(const Mat& frame)
 {
     Mat hsv;
-    Mat hue;
     Mat backproj;
     Mat mask;
+    
     
     /* calculate hsv for the frame */
     cvtColor(frame, hsv, COLOR_BGR2HSV);
     inRange(hsv, minHSV, maxHSV, mask);
     
-    /* Extract hue :) */
-    hue.create(hsv.size(), hsv.depth());
-    int ch[] = {0, 0};
-    mixChannels(&hue, 1, &hue, 1, ch, 1);
-    calcBackProject(&hue, 1, 0, histROI, backproj, &ranges); 
+    calcBackProject(&hsv, 1, ch, histROI, backproj, ranges, 1, true); 
     backproj &= mask; 
     
-    RotatedRect currBox = CamShift(backproj, trackWindow, TermCriteria( TermCriteria::EPS | TermCriteria::COUNT, 10, 3 ));
+    /* threshold */
+    int thresh = 0.4*255; 
+    threshold(backproj, backproj, thresh, 255, THRESH_TOZERO);
     
-    if(trackWindow.area() <= 1)n
+    /* erosion and dilation */
+    Mat kernel = getStructuringElement(MORPH_CROSS, Size(3,3));
+    dilate(backproj, backproj, kernel);
+    erode(backproj, backproj, kernel);
+    
+    RotatedRect currBox = CamShift(backproj, trackWindow, TermCriteria( TermCriteria::EPS | TermCriteria::COUNT, 15, 3 ));
+       
+    imshow("backproj", backproj);
+    
+    if(trackWindow.area() <= 1)
         trackWindow = origTrackWindow;
-    
-    Rect br = getBoundingBox(frame, currBox);
-    
-    Mat currentROI = Mat(frame, br);
-    cvtColor(currentROI, currentROI, COLOR_BGR2GRAY);
-    adaptiveThreshold(currentROI, currentROI, 255, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY,11,2);
-
-    
-    imshow("thresh", currentROI);
-    
+        
     return currBox;
 }
 
@@ -102,21 +90,6 @@ Rect HandPoseExtractor::getBoundingBox(const Mat& frame, const RotatedRect& rect
     br.width = MAX(0, br.width);
     
     return br;
-}
-
-vector<Rect> HandPoseExtractor::getHandPositionHaar(const Mat& frame)
-{
-    vector<Rect> palms;
-    Mat grayFrame;
-    
-    imshow("HAAR", frame);
-    
-    cvtColor(frame, grayFrame, COLOR_BGR2GRAY);
-    equalizeHist(grayFrame, grayFrame);
-    
-    palmClassifier.detectMultiScale(grayFrame, palms);
-    
-    return palms;
 }
 
 HandPoseExtractor::~HandPoseExtractor() 

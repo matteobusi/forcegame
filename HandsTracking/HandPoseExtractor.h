@@ -12,28 +12,32 @@
 #include <utility>
 #include <string>
 
-class HandPoseExtractor {
+class HandPoseExtractor
+{
 public:
-    HandPoseExtractor(const cv::Mat& roi, const cv::Rect& initialTW);
+    HandPoseExtractor(const cv::Mat& frame, const cv::Rect& oTrackWindow);
     HandPoseExtractor(); 
     
-    cv::RotatedRect getROICurrent(const cv::Mat& frame);
-    std::vector<cv::Rect> getHandPositionHaar(const cv::Mat& frame);
-    
+    cv::RotatedRect getHandPosition(const cv::Mat& frame);
     cv::Rect getBoundingBox(const cv::Mat& frame, const cv::RotatedRect& rect);
     
     virtual ~HandPoseExtractor();
 private:
     /* Constants */
     static const char palmDetectorCascade[];    
-    static const int histROIsz;
-    static const float hueRange[];
-    static const float* ranges;
-    static const cv::Scalar minHSV, maxHSV;
+    static const int histROIsz[];
+    static const float hueRange[], saturationRange[];
+    static const float* ranges[]; 
+    static const int ch[];
+    
+    cv::Scalar minHSV, maxHSV;  
 
     cv::Rect trackWindow, origTrackWindow;
     cv::Mat histROI;
-    cv::CascadeClassifier palmClassifier;
+    
+    static const float kGain = 1;
+    
+    cv::Mat oldBackProj;
 };
 
 #endif	/* HANDPOSEEXTRACTOR_H */

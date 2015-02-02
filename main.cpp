@@ -22,10 +22,10 @@ using namespace std;
 using namespace cv;
 
 /* Define ROI initial points */
-const Point p1ROI(90, 120);
-const Point p2ROI(200, 300);
+const Point p1ROI(100, 100);
+const Point p2ROI(300, 400);
 
-const int camera = 1;
+const int camera = 0;
 
 int main(int argc, char** argv) 
 {
@@ -58,7 +58,8 @@ int main(int argc, char** argv)
             exit(-1);
         }
         
-        rectangle(bak, p1ROI, p2ROI, Scalar(0, 255, 255), 2);
+        rectangle(bak, p1ROI, p2ROI, Scalar(0, 255, 255), 1);
+        
         imshow(CAL_WND, bak);
         key = waitKey(1);
     }
@@ -68,7 +69,7 @@ int main(int argc, char** argv)
     
     
     roi = Mat(frame, Rect(p1ROI, p2ROI)).clone();
-    HandPoseExtractor hand(roi, Rect(p1ROI, p2ROI)); 
+    HandPoseExtractor hand(frame, Rect(p1ROI, p2ROI)); 
                 
     namedWindow(ROI_WND);
     moveWindow(ROI_WND, 10, 50);
@@ -91,7 +92,7 @@ int main(int argc, char** argv)
             exit(-1);
         }
         
-        RotatedRect r = hand.getROICurrent(frame);
+        RotatedRect r = hand.getHandPosition(frame);
         Rect roiHandRect = hand.getBoundingBox(frame, r);        
         rectangle(frame, roiHandRect, Scalar(255, 255, 0), 2);  
         
