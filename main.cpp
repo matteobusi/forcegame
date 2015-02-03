@@ -25,7 +25,7 @@ using namespace cv;
 const Point p1ROI(100, 100);
 const Point p2ROI(300, 400);
 
-const int camera = 0;
+const int camera = 1;
 
 int main(int argc, char** argv) 
 {
@@ -65,8 +65,7 @@ int main(int argc, char** argv)
     }
     
     if(key==ESC_KEY)
-        exit(0);
-    
+        exit(0);    
     
     roi = Mat(frame, Rect(p1ROI, p2ROI)).clone();
     HandPoseExtractor hand(frame, Rect(p1ROI, p2ROI)); 
@@ -92,16 +91,15 @@ int main(int argc, char** argv)
             exit(-1);
         }
         
-        RotatedRect r = hand.getHandPosition(frame);
-        Rect roiHandRect = hand.getBoundingBox(frame, r);        
+        RotatedRect handInfo = hand.getHandPosition(frame);
+        Rect roiHandRect = hand.getBoundingBox(frame, handInfo);        
         rectangle(frame, roiHandRect, Scalar(255, 255, 0), 2);  
         
         Point2f pts[4];
-        r.points(pts);
+        handInfo.points(pts);
         
         for (int i = 0; i < 4; i++)
             line(frame, pts[i], pts[(i+1)%4], Scalar(0,255,0));
-               
         
         imshow(OUT_WND, frame);
         key = waitKey(10);

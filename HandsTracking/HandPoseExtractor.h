@@ -34,10 +34,6 @@ private:
 
     cv::Rect trackWindow, origTrackWindow;
     cv::Mat histROI;
-    
-    static const float kGain = 1;
-    
-    cv::Mat oldBackProj;
 };
 
 #endif	/* HANDPOSEEXTRACTOR_H */

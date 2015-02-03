@@ -38,8 +38,6 @@ HandPoseExtractor::HandPoseExtractor(const Mat& frame, const Rect& oTrackWindow)
 
     trackWindow = Rect(oTrackWindow);
     origTrackWindow = Rect(oTrackWindow);
-    
-    oldBackProj = Mat();
 }
 
 
@@ -57,34 +55,53 @@ RotatedRect HandPoseExtractor::getHandPosition(const Mat& frame)
     calcBackProject(&hsv, 1, ch, histROI, backproj, ranges, 1, true); 
     backproj &= mask; 
     
-    /* threshold */
-    int thresh = 0.4*255; 
-    threshold(backproj, backproj, thresh, 255, THRESH_TOZERO);
-    
-    /* erosion and dilation */
+    /* Remove some noise - mainly background */
     Mat kernel = getStructuringElement(MORPH_CROSS, Size(3,3));
+    
+    /* open */
+    erode(backproj, backproj, kernel);
+    dilate(backproj, backproj, kernel);
+    
+    /* close */
     dilate(backproj, backproj, kernel);
     erode(backproj, backproj, kernel);
     
-    RotatedRect currBox = CamShift(backproj, trackWindow, TermCriteria( TermCriteria::EPS | TermCriteria::COUNT, 15, 3 ));
-       
-    imshow("backproj", backproj);
+    /* threshold - filter out things with too low probability */
+    int thresh = 0.5*255; 
+    threshold(backproj, backproj, thresh, 255, THRESH_TOZERO);
     
+    RotatedRect currBox = CamShift(backproj, trackWindow, TermCriteria( TermCriteria::EPS | TermCriteria::COUNT, 15, 3 ));
     if(trackWindow.area() <= 1)
         trackWindow = origTrackWindow;
-        
+      
+    Rect boundingBox = getBoundingBox(frame, currBox);    
+    imshow("BP", backproj);
+    moveWindow("BP", 900, 50);
+    /* Enforce the estimation with Kalman filter */
+    int stateSize = 7;
+    int measSize = 5;
+    int contrSize = 0;
+    int type = CV_32F;
+    
+    Mat x(stateSize, 1, type) ; // State
+    Mat z(measSize, 1, type); // Measures
+    
+    KalmanFilter kf(stateSize, measSize, contrSize);
+    
+    
     return currBox;
+   
 }
 
 Rect HandPoseExtractor::getBoundingBox(const Mat& frame, const RotatedRect& rect)
 {
     Rect br = rect.boundingRect();
     
-    br.x = MAX(0, br.x - 10);
-    br.y = MAX(0, br.y - 10);
+    br.x = MAX(0, br.x - 50);
+    br.y = MAX(0, br.y - 50);
     
-    br.height = MIN(frame.rows - br.y, br.height + 10);
-    br.width = MIN(frame.cols - br.x, br.width + 10);
+    br.height = MIN(frame.rows - br.y, br.height + 100);
+    br.width = MIN(frame.cols - br.x, br.width + 100);
     
     br.height = MAX(0, br.height);
     br.width = MAX(0, br.width);
