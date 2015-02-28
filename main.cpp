@@ -25,7 +25,7 @@ using namespace cv;
 const Point p1ROI(100, 100);
 const Point p2ROI(300, 400);
 
-const int camera = 1;
+const int camera = 0;
 
 int main(int argc, char** argv) 
 {
@@ -40,8 +40,12 @@ int main(int argc, char** argv)
         exit(-1);            
     }
     
+
+    capture.set(CV_CAP_PROP_FRAME_WIDTH,640);
+    capture.set(CV_CAP_PROP_FRAME_HEIGHT,480);
+    
     namedWindow(CAL_WND);
-    moveWindow(CAL_WND, 450, 50);
+    moveWindow(CAL_WND, 200, 50);
     
     /* Let's take the sample */
     while(key != ESC_KEY && key != SPACE_KEY)

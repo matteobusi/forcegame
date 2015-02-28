@@ -23,8 +23,7 @@ public:
     
     virtual ~HandPoseExtractor();
 private:
-    /* Constants */
-    static const char palmDetectorCascade[];    
+    /* Constants */ 
     static const int histROIsz[];
     static const float hueRange[], saturationRange[];
     static const float* ranges[]; 
@@ -34,6 +33,26 @@ private:
 
     cv::Rect trackWindow, origTrackWindow;
     cv::Mat histROI;
+    
+    
+    static const int stateSize = 8;
+    static const int measSize = 5;
+    static const int contrSize = 0;
+    static const int type = CV_32F;
+    cv::Mat_<float> x; 
+    cv::Mat_<float> z;
+    
+    cv::KalmanFilter kf;   
+    
+    int countNotFound;
+    bool found;
+    double ticks;
+    
+    int learningCount = 500;
+    
+    cv::Ptr<cv::BackgroundSubtractor> bgSub;
+    
+    double dist(cv::Point p1, cv::Point p2);
 };
 
 #endif	/* HANDPOSEEXTRACTOR_H */
